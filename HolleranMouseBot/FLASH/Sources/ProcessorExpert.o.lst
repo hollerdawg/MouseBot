@@ -1,0 +1,1501 @@
+   1              		.cpu cortex-m0
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 34, 0
+  11              		.eabi_attribute 18, 4
+  12              		.code	16
+  13              		.file	"ProcessorExpert.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	ChannelsCfg
+  18              		.section	.rodata.ChannelsCfg,"a",%progbits
+  19              		.align	2
+  22              	ChannelsCfg:
+  23 0000 08       		.byte	8
+  24 0001 09       		.byte	9
+  25 0002 0C       		.byte	12
+  26 0003 0D       		.byte	13
+  27 0004 1F       		.byte	31
+  28              		.global	ChannelsCfg2
+  29 0005 000000   		.section	.rodata.ChannelsCfg2,"a",%progbits
+  30              		.align	2
+  33              	ChannelsCfg2:
+  34 0000 00       		.byte	0
+  35 0001 00       		.byte	0
+  36 0002 10       		.byte	16
+  37 0003 00       		.byte	0
+  38 0004 00       		.byte	0
+  39              		.comm	MeasuredValues,8,4
+  40              		.comm	FirstVals,8,4
+  41              		.comm	AllMeasures,16,4
+  42 0005 000000   		.section	.bss.CorrectedVals,"aw",%nobits
+  43              		.align	2
+  46              	CorrectedVals:
+  47 0000 00000000 		.space	16
+  47      00000000 
+  47      00000000 
+  47      00000000 
+  48              		.global	sensors
+  49              		.section	.bss.sensors,"aw",%nobits
+  50              		.align	2
+  53              	sensors:
+  54 0000 00000000 		.space	4
+  55              		.comm	Measured,1,1
+  56              		.global	True
+  57              		.section	.data.True,"aw",%progbits
+  60              	True:
+  61 0000 01       		.byte	1
+  62              		.global	False
+  63              		.section	.bss.False,"aw",%nobits
+  66              	False:
+  67 0000 00       		.space	1
+  68              		.section	.text.getADC,"ax",%progbits
+  69              		.align	2
+  70              		.global	getADC
+  71              		.code	16
+  72              		.thumb_func
+  74              	getADC:
+  75              	.LFB0:
+  76              		.file 1 "../Sources/ProcessorExpert.c"
+   1:../Sources/ProcessorExpert.c **** /** ###################################################################
+   2:../Sources/ProcessorExpert.c ****  **     Filename    : ProcessorExpert.c
+   3:../Sources/ProcessorExpert.c ****  **     Project     : ProcessorExpert
+   4:../Sources/ProcessorExpert.c ****  **     Processor   : MKL25Z128VLK4
+   5:../Sources/ProcessorExpert.c ****  **     Version     : Driver 01.01
+   6:../Sources/ProcessorExpert.c ****  **     Compiler    : GNU C Compiler
+   7:../Sources/ProcessorExpert.c ****  **     Date/Time   : 2013-01-03, 14:56, # CodeGen: 0
+   8:../Sources/ProcessorExpert.c ****  **     Abstract    :
+   9:../Sources/ProcessorExpert.c ****  **         Main module.
+  10:../Sources/ProcessorExpert.c ****  **         This module contains user's application code.
+  11:../Sources/ProcessorExpert.c ****  **     Settings    :
+  12:../Sources/ProcessorExpert.c ****  **     Contents    :
+  13:../Sources/ProcessorExpert.c ****  **         No public methods
+  14:../Sources/ProcessorExpert.c ****  **
+  15:../Sources/ProcessorExpert.c ****  ** ###################################################################*/
+  16:../Sources/ProcessorExpert.c **** /* MODULE ProcessorExpert */
+  17:../Sources/ProcessorExpert.c **** 
+  18:../Sources/ProcessorExpert.c **** 
+  19:../Sources/ProcessorExpert.c **** /* Including needed modules to compile this module/procedure */
+  20:../Sources/ProcessorExpert.c **** #include "Cpu.h"
+  21:../Sources/ProcessorExpert.c **** #include "Events.h"
+  22:../Sources/ProcessorExpert.c **** #include "CsIO1.h"
+  23:../Sources/ProcessorExpert.c **** #include "IO1.h"
+  24:../Sources/ProcessorExpert.c **** #include "ADC1.h"
+  25:../Sources/ProcessorExpert.c **** #include "DMA1.h"
+  26:../Sources/ProcessorExpert.c **** #include "TU1.h"
+  27:../Sources/ProcessorExpert.c **** #include "IR.h"
+  28:../Sources/ProcessorExpert.c **** #include "LEDpin1.h"
+  29:../Sources/ProcessorExpert.c **** #include "BitIoLdd1.h"
+  30:../Sources/ProcessorExpert.c **** #include "right.h"
+  31:../Sources/ProcessorExpert.c **** #include "PwmLdd1.h"
+  32:../Sources/ProcessorExpert.c **** #include "TU2.h"
+  33:../Sources/ProcessorExpert.c **** #include "left.h"
+  34:../Sources/ProcessorExpert.c **** #include "PwmLdd2.h"
+  35:../Sources/ProcessorExpert.c **** #include "w.h"
+  36:../Sources/ProcessorExpert.c **** /* Including shared modules, which are used for whole project */
+  37:../Sources/ProcessorExpert.c **** #include "PE_Types.h"
+  38:../Sources/ProcessorExpert.c **** #include "PE_Error.h"
+  39:../Sources/ProcessorExpert.c **** #include "PE_Const.h"
+  40:../Sources/ProcessorExpert.c **** #include "IO_Map.h"
+  41:../Sources/ProcessorExpert.c **** 
+  42:../Sources/ProcessorExpert.c **** /* User includes (#include below this line is not maintained by Processor Expert) */
+  43:../Sources/ProcessorExpert.c **** #include "my.h"
+  44:../Sources/ProcessorExpert.c **** 
+  45:../Sources/ProcessorExpert.c **** // size of the channel configuration array
+  46:../Sources/ProcessorExpert.c **** #define ADC_CHANNELS_COUNT 4
+  47:../Sources/ProcessorExpert.c **** // delay time for getting ADC info
+  48:../Sources/ProcessorExpert.c **** #define T 1000
+  49:../Sources/ProcessorExpert.c **** // how many samples are to be taken per average
+  50:../Sources/ProcessorExpert.c **** #define samples 4
+  51:../Sources/ProcessorExpert.c **** // value to determine a sensor "triggered"
+  52:../Sources/ProcessorExpert.c **** #define sens 200
+  53:../Sources/ProcessorExpert.c **** // PWM compare times
+  54:../Sources/ProcessorExpert.c **** #define lFwd 22000-1700
+  55:../Sources/ProcessorExpert.c **** #define rFwd 22000-1300
+  56:../Sources/ProcessorExpert.c **** #define stop 22000-1500
+  57:../Sources/ProcessorExpert.c **** #define lBack 22000-1300
+  58:../Sources/ProcessorExpert.c **** #define rBack 22000-1700
+  59:../Sources/ProcessorExpert.c **** // Turn delay time
+  60:../Sources/ProcessorExpert.c **** #define Twait 700
+  61:../Sources/ProcessorExpert.c **** //number of sensors on robot
+  62:../Sources/ProcessorExpert.c **** #define SensNum 4
+  63:../Sources/ProcessorExpert.c **** 
+  64:../Sources/ProcessorExpert.c **** // value for CFG2 array selecting MUX A pins or default
+  65:../Sources/ProcessorExpert.c **** #define PIN_A (0) 
+  66:../Sources/ProcessorExpert.c **** // value for CFG2 array selecting MUX B pins
+  67:../Sources/ProcessorExpert.c **** #define PIN_B (ADC_CFG2_MUXSEL_MASK)
+  68:../Sources/ProcessorExpert.c **** 
+  69:../Sources/ProcessorExpert.c **** // configuration array for channels - channel numbers. Should ends with 0x1F which stops conversion
+  70:../Sources/ProcessorExpert.c **** // seconcd onfiguration array coreesponding to channels selecting A/B pins
+  71:../Sources/ProcessorExpert.c **** // For example: 0 + PIN_A corresponds to the pin ADC0_SE0,   5 + PIN_5 selects the pin ADC0_SE5b
+  72:../Sources/ProcessorExpert.c **** // You can use these arrays to reorder the measurement as you need
+  73:../Sources/ProcessorExpert.c **** //channels 11 and 15 correlate to other ADC channels on arduino shields
+  74:../Sources/ProcessorExpert.c **** const uint8_t ChannelsCfg [ADC_CHANNELS_COUNT + 1] =  {    8,     9,    12,    13,/*    11,    15,*
+  75:../Sources/ProcessorExpert.c **** const uint8_t ChannelsCfg2[ADC_CHANNELS_COUNT + 1] =  {PIN_A, PIN_A, PIN_B, PIN_A,/* PIN_A, PIN_A,*
+  76:../Sources/ProcessorExpert.c **** 
+  77:../Sources/ProcessorExpert.c **** // buffer for resulting measured values and for calculating average values
+  78:../Sources/ProcessorExpert.c **** uint16_t MeasuredValues[ADC_CHANNELS_COUNT];
+  79:../Sources/ProcessorExpert.c **** uint16_t FirstVals[ADC_CHANNELS_COUNT];
+  80:../Sources/ProcessorExpert.c **** int AllMeasures[ADC_CHANNELS_COUNT];
+  81:../Sources/ProcessorExpert.c **** static int CorrectedVals[ADC_CHANNELS_COUNT];
+  82:../Sources/ProcessorExpert.c **** 
+  83:../Sources/ProcessorExpert.c **** //used as a "register" to communicate which sensors are triggered
+  84:../Sources/ProcessorExpert.c **** unsigned int sensors = 0x0;
+  85:../Sources/ProcessorExpert.c **** 
+  86:../Sources/ProcessorExpert.c **** // flag for end of measurement
+  87:../Sources/ProcessorExpert.c **** bool Measured;
+  88:../Sources/ProcessorExpert.c **** bool True = TRUE;
+  89:../Sources/ProcessorExpert.c **** bool False = FALSE;
+  90:../Sources/ProcessorExpert.c **** 
+  91:../Sources/ProcessorExpert.c **** //Grabs all the ADC Values using the DMA and then sets the ADC values to an array
+  92:../Sources/ProcessorExpert.c **** void getADC(void){
+  77              		.loc 1 92 0
+  78              		.cfi_startproc
+  79 0000 80B5     		push	{r7, lr}
+  80              	.LCFI0:
+  81              		.cfi_def_cfa_offset 8
+  82              		.cfi_offset 7, -8
+  83              		.cfi_offset 14, -4
+  84 0002 82B0     		sub	sp, sp, #8
+  85              	.LCFI1:
+  86              		.cfi_def_cfa_offset 16
+  87 0004 00AF     		add	r7, sp, #0
+  88              	.LCFI2:
+  89              		.cfi_def_cfa_register 7
+  93:../Sources/ProcessorExpert.c **** 	int x = 0;
+  90              		.loc 1 93 0
+  91 0006 0023     		mov	r3, #0
+  92 0008 7B60     		str	r3, [r7, #4]
+  94:../Sources/ProcessorExpert.c **** 	// clear flag  
+  95:../Sources/ProcessorExpert.c **** 	Measured = FALSE;	
+  93              		.loc 1 95 0
+  94 000a 234B     		ldr	r3, .L5
+  95 000c 0022     		mov	r2, #0
+  96 000e 1A70     		strb	r2, [r3]
+  96:../Sources/ProcessorExpert.c **** 	// reset DMA0 destination pointer to beginning of the buffer 
+  97:../Sources/ProcessorExpert.c **** 	DMA_DAR0 = (uint32_t) &MeasuredValues;
+  97              		.loc 1 97 0
+  98 0010 224A     		ldr	r2, .L5+4
+  99 0012 2349     		ldr	r1, .L5+8
+ 100 0014 8223     		mov	r3, #130
+ 101 0016 5B00     		lsl	r3, r3, #1
+ 102 0018 D150     		str	r1, [r2, r3]
+  98:../Sources/ProcessorExpert.c **** 	// reset DMA1 source pointer (MUX switching writes)
+  99:../Sources/ProcessorExpert.c **** 	DMA_SAR1 = (uint32_t) &ChannelsCfg2;
+ 103              		.loc 1 99 0
+ 104 001a 204A     		ldr	r2, .L5+4
+ 105 001c 2149     		ldr	r1, .L5+12
+ 106 001e 8823     		mov	r3, #136
+ 107 0020 5B00     		lsl	r3, r3, #1
+ 108 0022 D150     		str	r1, [r2, r3]
+ 100:../Sources/ProcessorExpert.c **** 	// reset DMA2 source pointer (channel switching and conversion start writes)
+ 101:../Sources/ProcessorExpert.c **** 	DMA_SAR2 = (uint32_t) &ChannelsCfg;
+ 109              		.loc 1 101 0
+ 110 0024 1D4A     		ldr	r2, .L5+4
+ 111 0026 2049     		ldr	r1, .L5+16
+ 112 0028 9023     		mov	r3, #144
+ 113 002a 5B00     		lsl	r3, r3, #1
+ 114 002c D150     		str	r1, [r2, r3]
+ 102:../Sources/ProcessorExpert.c **** 	// number of total bytes to be transfered from the ADC result register A 
+ 103:../Sources/ProcessorExpert.c **** 	DMA_DSR_BCR0 = ADC_CHANNELS_COUNT * 2;
+ 115              		.loc 1 103 0
+ 116 002e 1B4A     		ldr	r2, .L5+4
+ 117 0030 8423     		mov	r3, #132
+ 118 0032 5B00     		lsl	r3, r3, #1
+ 119 0034 0821     		mov	r1, #8
+ 120 0036 D150     		str	r1, [r2, r3]
+ 104:../Sources/ProcessorExpert.c **** 	// set number of total bytes to be transfered to the ADC0_CFG2 
+ 105:../Sources/ProcessorExpert.c **** 	DMA_DSR_BCR1 = ADC_CHANNELS_COUNT + 1;
+ 121              		.loc 1 105 0
+ 122 0038 184A     		ldr	r2, .L5+4
+ 123 003a 8C23     		mov	r3, #140
+ 124 003c 5B00     		lsl	r3, r3, #1
+ 125 003e 0521     		mov	r1, #5
+ 126 0040 D150     		str	r1, [r2, r3]
+ 106:../Sources/ProcessorExpert.c **** 	// set number of total bytes to be transfered to the ADC0_SC1A.  
+ 107:../Sources/ProcessorExpert.c **** 	DMA_DSR_BCR2 = ADC_CHANNELS_COUNT + 1;
+ 127              		.loc 1 107 0
+ 128 0042 164A     		ldr	r2, .L5+4
+ 129 0044 9423     		mov	r3, #148
+ 130 0046 5B00     		lsl	r3, r3, #1
+ 131 0048 0521     		mov	r1, #5
+ 132 004a D150     		str	r1, [r2, r3]
+ 108:../Sources/ProcessorExpert.c **** 	// start first DMA1 transfer (selects mux, then fires channel 2 to select channel which starts the
+ 109:../Sources/ProcessorExpert.c **** 	DMA_DCR1 |= DMA_DCR_START_MASK;
+ 133              		.loc 1 109 0
+ 134 004c 134A     		ldr	r2, .L5+4
+ 135 004e 1349     		ldr	r1, .L5+4
+ 136 0050 8E23     		mov	r3, #142
+ 137 0052 5B00     		lsl	r3, r3, #1
+ 138 0054 CB58     		ldr	r3, [r1, r3]
+ 139 0056 8021     		mov	r1, #128
+ 140 0058 4902     		lsl	r1, r1, #9
+ 141 005a 1943     		orr	r1, r3
+ 142 005c 8E23     		mov	r3, #142
+ 143 005e 5B00     		lsl	r3, r3, #1
+ 144 0060 D150     		str	r1, [r2, r3]
+ 110:../Sources/ProcessorExpert.c **** 	// wait till it's all measured
+ 111:../Sources/ProcessorExpert.c **** 	while (!Measured) {}
+ 145              		.loc 1 111 0
+ 146 0062 C046     		mov	r8, r8
+ 147              	.L2:
+ 148              		.loc 1 111 0 is_stmt 0
+ 149 0064 0C4B     		ldr	r3, .L5
+ 150 0066 1B78     		ldrb	r3, [r3]
+ 151 0068 002B     		cmp	r3, #0
+ 152 006a FBD0     		beq	.L2
+ 112:../Sources/ProcessorExpert.c **** 	for(x=0; x<ADC_CHANNELS_COUNT; x++){
+ 153              		.loc 1 112 0 is_stmt 1
+ 154 006c 0023     		mov	r3, #0
+ 155 006e 7B60     		str	r3, [r7, #4]
+ 156 0070 0CE0     		b	.L3
+ 157              	.L4:
+ 113:../Sources/ProcessorExpert.c **** 		MeasuredValues[x] = ~MeasuredValues[x];
+ 158              		.loc 1 113 0
+ 159 0072 0B4B     		ldr	r3, .L5+8
+ 160 0074 7A68     		ldr	r2, [r7, #4]
+ 161 0076 5200     		lsl	r2, r2, #1
+ 162 0078 D35A     		ldrh	r3, [r2, r3]
+ 163 007a DB43     		mvn	r3, r3
+ 164 007c 99B2     		uxth	r1, r3
+ 165 007e 084B     		ldr	r3, .L5+8
+ 166 0080 7A68     		ldr	r2, [r7, #4]
+ 167 0082 5200     		lsl	r2, r2, #1
+ 168 0084 D152     		strh	r1, [r2, r3]
+ 112:../Sources/ProcessorExpert.c **** 	for(x=0; x<ADC_CHANNELS_COUNT; x++){
+ 169              		.loc 1 112 0
+ 170 0086 7B68     		ldr	r3, [r7, #4]
+ 171 0088 0133     		add	r3, r3, #1
+ 172 008a 7B60     		str	r3, [r7, #4]
+ 173              	.L3:
+ 112:../Sources/ProcessorExpert.c **** 	for(x=0; x<ADC_CHANNELS_COUNT; x++){
+ 174              		.loc 1 112 0 is_stmt 0
+ 175 008c 7B68     		ldr	r3, [r7, #4]
+ 176 008e 032B     		cmp	r3, #3
+ 177 0090 EFDD     		ble	.L4
+ 114:../Sources/ProcessorExpert.c **** 	}
+ 115:../Sources/ProcessorExpert.c **** }
+ 178              		.loc 1 115 0 is_stmt 1
+ 179 0092 BD46     		mov	sp, r7
+ 180 0094 02B0     		add	sp, sp, #8
+ 181              		@ sp needed for prologue
+ 182 0096 80BD     		pop	{r7, pc}
+ 183              	.L6:
+ 184              		.align	2
+ 185              	.L5:
+ 186 0098 00000000 		.word	Measured
+ 187 009c 00800040 		.word	1073774592
+ 188 00a0 00000000 		.word	MeasuredValues
+ 189 00a4 00000000 		.word	ChannelsCfg2
+ 190 00a8 00000000 		.word	ChannelsCfg
+ 191              		.cfi_endproc
+ 192              	.LFE0:
+ 194              		.section	.text.move,"ax",%progbits
+ 195              		.align	2
+ 196              		.global	move
+ 197              		.code	16
+ 198              		.thumb_func
+ 200              	move:
+ 201              	.LFB1:
+ 116:../Sources/ProcessorExpert.c **** 
+ 117:../Sources/ProcessorExpert.c **** /*
+ 118:../Sources/ProcessorExpert.c ****  * sensors contains a binary representation of the sensors that 
+ 119:../Sources/ProcessorExpert.c ****  * are triggered. sensors will then be analyzed by move() and will
+ 120:../Sources/ProcessorExpert.c ****  * move the robot according to what sensors are triggered
+ 121:../Sources/ProcessorExpert.c ****  * 
+ 122:../Sources/ProcessorExpert.c ****  * bit 0 : Rear
+ 123:../Sources/ProcessorExpert.c ****  * bit 1 : Left
+ 124:../Sources/ProcessorExpert.c ****  * bit 2 : Right
+ 125:../Sources/ProcessorExpert.c ****  * bit 3 : Front
+ 126:../Sources/ProcessorExpert.c ****  * 
+ 127:../Sources/ProcessorExpert.c ****  * This function will determine what actions are to be taken when sensors are triggered,
+ 128:../Sources/ProcessorExpert.c ****  * this is done by telling the servos which direction to turn.
+ 129:../Sources/ProcessorExpert.c ****  */
+ 130:../Sources/ProcessorExpert.c **** 
+ 131:../Sources/ProcessorExpert.c **** void move(){
+ 202              		.loc 1 131 0
+ 203              		.cfi_startproc
+ 204 0000 80B5     		push	{r7, lr}
+ 205              	.LCFI3:
+ 206              		.cfi_def_cfa_offset 8
+ 207              		.cfi_offset 7, -8
+ 208              		.cfi_offset 14, -4
+ 209 0002 00AF     		add	r7, sp, #0
+ 210              	.LCFI4:
+ 211              		.cfi_def_cfa_register 7
+ 132:../Sources/ProcessorExpert.c **** 		switch(sensors){
+ 212              		.loc 1 132 0
+ 213 0004 C74B     		ldr	r3, .L27
+ 214 0006 1B68     		ldr	r3, [r3]
+ 215 0008 0F2B     		cmp	r3, #15
+ 216 000a 00D9     		bls	.LCB128
+ 217 000c 79E1     		b	.L8	@long jump
+ 218              	.LCB128:
+ 219 000e 9A00     		lsl	r2, r3, #2
+ 220 0010 C54B     		ldr	r3, .L27+4
+ 221 0012 D318     		add	r3, r2, r3
+ 222 0014 1B68     		ldr	r3, [r3]
+ 223 0016 9F46     		mov	pc, r3
+ 224              		.section	.rodata.move,"a",%progbits
+ 225              		.align	2
+ 226              	.L25:
+ 227 0000 18000000 		.word	.L9
+ 228 0004 36000000 		.word	.L10
+ 229 0008 54000000 		.word	.L11
+ 230 000c 72000000 		.word	.L12
+ 231 0010 B6000000 		.word	.L13
+ 232 0014 D4000000 		.word	.L14
+ 233 0018 18010000 		.word	.L15
+ 234 001c 36010000 		.word	.L16
+ 235 0020 54010000 		.word	.L17
+ 236 0024 72010000 		.word	.L18
+ 237 0028 B6010000 		.word	.L19
+ 238 002c FA010000 		.word	.L20
+ 239 0030 3E020000 		.word	.L21
+ 240 0034 82020000 		.word	.L22
+ 241 0038 C6020000 		.word	.L23
+ 242 003c E4020000 		.word	.L24
+ 243              		.section	.text.move
+ 244              	.L9:
+ 133:../Sources/ProcessorExpert.c **** 		case 0x0	:	//sensors detect nothing, no movement
+ 134:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(stop);
+ 245              		.loc 1 134 0
+ 246 0018 C44B     		ldr	r3, .L27+8
+ 247 001a 1A69     		ldr	r2, [r3, #16]
+ 248 001c C44B     		ldr	r3, .L27+12
+ 249 001e 101C     		mov	r0, r2
+ 250 0020 191C     		mov	r1, r3
+ 251 0022 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 135:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(stop);
+ 252              		.loc 1 135 0
+ 253 0026 C14B     		ldr	r3, .L27+8
+ 254 0028 5A69     		ldr	r2, [r3, #20]
+ 255 002a C14B     		ldr	r3, .L27+12
+ 256 002c 101C     		mov	r0, r2
+ 257 002e 191C     		mov	r1, r3
+ 258 0030 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 136:../Sources/ProcessorExpert.c **** 			break;
+ 259              		.loc 1 136 0
+ 260 0034 73E1     		b	.L7
+ 261              	.L10:
+ 137:../Sources/ProcessorExpert.c **** 		case 0x1	:	//something in the rear, move forward
+ 138:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 262              		.loc 1 138 0
+ 263 0036 BD4B     		ldr	r3, .L27+8
+ 264 0038 1A69     		ldr	r2, [r3, #16]
+ 265 003a BE4B     		ldr	r3, .L27+16
+ 266 003c 101C     		mov	r0, r2
+ 267 003e 191C     		mov	r1, r3
+ 268 0040 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 139:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 269              		.loc 1 139 0
+ 270 0044 B94B     		ldr	r3, .L27+8
+ 271 0046 5A69     		ldr	r2, [r3, #20]
+ 272 0048 BB4B     		ldr	r3, .L27+20
+ 273 004a 101C     		mov	r0, r2
+ 274 004c 191C     		mov	r1, r3
+ 275 004e FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 140:../Sources/ProcessorExpert.c **** 			break;
+ 276              		.loc 1 140 0
+ 277 0052 64E1     		b	.L7
+ 278              	.L11:
+ 141:../Sources/ProcessorExpert.c **** 		case 0x2	:	//something to the left, turn right
+ 142:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rBack);
+ 279              		.loc 1 142 0
+ 280 0054 B54B     		ldr	r3, .L27+8
+ 281 0056 1A69     		ldr	r2, [r3, #16]
+ 282 0058 B74B     		ldr	r3, .L27+20
+ 283 005a 101C     		mov	r0, r2
+ 284 005c 191C     		mov	r1, r3
+ 285 005e FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 143:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 286              		.loc 1 143 0
+ 287 0062 B24B     		ldr	r3, .L27+8
+ 288 0064 5A69     		ldr	r2, [r3, #20]
+ 289 0066 B44B     		ldr	r3, .L27+20
+ 290 0068 101C     		mov	r0, r2
+ 291 006a 191C     		mov	r1, r3
+ 292 006c FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 144:../Sources/ProcessorExpert.c **** 			break;
+ 293              		.loc 1 144 0
+ 294 0070 55E1     		b	.L7
+ 295              	.L12:
+ 145:../Sources/ProcessorExpert.c **** 		case 0x3	:	//something left and rear, turn right, then forward
+ 146:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 296              		.loc 1 146 0
+ 297 0072 AE4B     		ldr	r3, .L27+8
+ 298 0074 1A69     		ldr	r2, [r3, #16]
+ 299 0076 AF4B     		ldr	r3, .L27+16
+ 300 0078 101C     		mov	r0, r2
+ 301 007a 191C     		mov	r1, r3
+ 302 007c FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 147:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 303              		.loc 1 147 0
+ 304 0080 AA4B     		ldr	r3, .L27+8
+ 305 0082 5A69     		ldr	r2, [r3, #20]
+ 306 0084 AC4B     		ldr	r3, .L27+20
+ 307 0086 101C     		mov	r0, r2
+ 308 0088 191C     		mov	r1, r3
+ 309 008a FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 148:../Sources/ProcessorExpert.c **** 			w_Waitms(Twait);
+ 310              		.loc 1 148 0
+ 311 008e AF23     		mov	r3, #175
+ 312 0090 9B00     		lsl	r3, r3, #2
+ 313 0092 181C     		mov	r0, r3
+ 314 0094 FFF7FEFF 		bl	w_Waitms
+ 149:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 315              		.loc 1 149 0
+ 316 0098 A44B     		ldr	r3, .L27+8
+ 317 009a 1A69     		ldr	r2, [r3, #16]
+ 318 009c A54B     		ldr	r3, .L27+16
+ 319 009e 101C     		mov	r0, r2
+ 320 00a0 191C     		mov	r1, r3
+ 321 00a2 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 150:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 322              		.loc 1 150 0
+ 323 00a6 A14B     		ldr	r3, .L27+8
+ 324 00a8 5A69     		ldr	r2, [r3, #20]
+ 325 00aa A34B     		ldr	r3, .L27+20
+ 326 00ac 101C     		mov	r0, r2
+ 327 00ae 191C     		mov	r1, r3
+ 328 00b0 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 151:../Sources/ProcessorExpert.c **** 			break;
+ 329              		.loc 1 151 0
+ 330 00b4 33E1     		b	.L7
+ 331              	.L13:
+ 152:../Sources/ProcessorExpert.c **** 		case 0x4	:	//something to the right, turn left
+ 153:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 332              		.loc 1 153 0
+ 333 00b6 9D4B     		ldr	r3, .L27+8
+ 334 00b8 1A69     		ldr	r2, [r3, #16]
+ 335 00ba 9E4B     		ldr	r3, .L27+16
+ 336 00bc 101C     		mov	r0, r2
+ 337 00be 191C     		mov	r1, r3
+ 338 00c0 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 154:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 339              		.loc 1 154 0
+ 340 00c4 994B     		ldr	r3, .L27+8
+ 341 00c6 5A69     		ldr	r2, [r3, #20]
+ 342 00c8 9A4B     		ldr	r3, .L27+16
+ 343 00ca 101C     		mov	r0, r2
+ 344 00cc 191C     		mov	r1, r3
+ 345 00ce FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 155:../Sources/ProcessorExpert.c **** 			break;
+ 346              		.loc 1 155 0
+ 347 00d2 24E1     		b	.L7
+ 348              	.L14:
+ 156:../Sources/ProcessorExpert.c **** 		case 0x5	:	//something to the right and rear, turn left, then forward
+ 157:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 349              		.loc 1 157 0
+ 350 00d4 954B     		ldr	r3, .L27+8
+ 351 00d6 1A69     		ldr	r2, [r3, #16]
+ 352 00d8 964B     		ldr	r3, .L27+16
+ 353 00da 101C     		mov	r0, r2
+ 354 00dc 191C     		mov	r1, r3
+ 355 00de FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 158:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 356              		.loc 1 158 0
+ 357 00e2 924B     		ldr	r3, .L27+8
+ 358 00e4 5A69     		ldr	r2, [r3, #20]
+ 359 00e6 934B     		ldr	r3, .L27+16
+ 360 00e8 101C     		mov	r0, r2
+ 361 00ea 191C     		mov	r1, r3
+ 362 00ec FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 159:../Sources/ProcessorExpert.c **** 			w_Waitms(Twait);
+ 363              		.loc 1 159 0
+ 364 00f0 AF23     		mov	r3, #175
+ 365 00f2 9B00     		lsl	r3, r3, #2
+ 366 00f4 181C     		mov	r0, r3
+ 367 00f6 FFF7FEFF 		bl	w_Waitms
+ 160:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 368              		.loc 1 160 0
+ 369 00fa 8C4B     		ldr	r3, .L27+8
+ 370 00fc 1A69     		ldr	r2, [r3, #16]
+ 371 00fe 8D4B     		ldr	r3, .L27+16
+ 372 0100 101C     		mov	r0, r2
+ 373 0102 191C     		mov	r1, r3
+ 374 0104 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 161:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 375              		.loc 1 161 0
+ 376 0108 884B     		ldr	r3, .L27+8
+ 377 010a 5A69     		ldr	r2, [r3, #20]
+ 378 010c 8A4B     		ldr	r3, .L27+20
+ 379 010e 101C     		mov	r0, r2
+ 380 0110 191C     		mov	r1, r3
+ 381 0112 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 162:../Sources/ProcessorExpert.c **** 			break;
+ 382              		.loc 1 162 0
+ 383 0116 02E1     		b	.L7
+ 384              	.L15:
+ 163:../Sources/ProcessorExpert.c **** 		case 0x6	:	//something right and left, move forward
+ 164:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 385              		.loc 1 164 0
+ 386 0118 844B     		ldr	r3, .L27+8
+ 387 011a 1A69     		ldr	r2, [r3, #16]
+ 388 011c 854B     		ldr	r3, .L27+16
+ 389 011e 101C     		mov	r0, r2
+ 390 0120 191C     		mov	r1, r3
+ 391 0122 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 165:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 392              		.loc 1 165 0
+ 393 0126 814B     		ldr	r3, .L27+8
+ 394 0128 5A69     		ldr	r2, [r3, #20]
+ 395 012a 834B     		ldr	r3, .L27+20
+ 396 012c 101C     		mov	r0, r2
+ 397 012e 191C     		mov	r1, r3
+ 398 0130 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 166:../Sources/ProcessorExpert.c **** 			break;
+ 399              		.loc 1 166 0
+ 400 0134 F3E0     		b	.L7
+ 401              	.L16:
+ 167:../Sources/ProcessorExpert.c **** 		case 0x7	:	//something right, left, and rear, move forward
+ 168:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 402              		.loc 1 168 0
+ 403 0136 7D4B     		ldr	r3, .L27+8
+ 404 0138 1A69     		ldr	r2, [r3, #16]
+ 405 013a 7E4B     		ldr	r3, .L27+16
+ 406 013c 101C     		mov	r0, r2
+ 407 013e 191C     		mov	r1, r3
+ 408 0140 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 169:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 409              		.loc 1 169 0
+ 410 0144 794B     		ldr	r3, .L27+8
+ 411 0146 5A69     		ldr	r2, [r3, #20]
+ 412 0148 7B4B     		ldr	r3, .L27+20
+ 413 014a 101C     		mov	r0, r2
+ 414 014c 191C     		mov	r1, r3
+ 415 014e FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 170:../Sources/ProcessorExpert.c **** 			break;
+ 416              		.loc 1 170 0
+ 417 0152 E4E0     		b	.L7
+ 418              	.L17:
+ 171:../Sources/ProcessorExpert.c **** 		case 0x8	:	//something in front, move backward
+ 172:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rBack);
+ 419              		.loc 1 172 0
+ 420 0154 754B     		ldr	r3, .L27+8
+ 421 0156 1A69     		ldr	r2, [r3, #16]
+ 422 0158 774B     		ldr	r3, .L27+20
+ 423 015a 101C     		mov	r0, r2
+ 424 015c 191C     		mov	r1, r3
+ 425 015e FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 173:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 426              		.loc 1 173 0
+ 427 0162 724B     		ldr	r3, .L27+8
+ 428 0164 5A69     		ldr	r2, [r3, #20]
+ 429 0166 734B     		ldr	r3, .L27+16
+ 430 0168 101C     		mov	r0, r2
+ 431 016a 191C     		mov	r1, r3
+ 432 016c FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 174:../Sources/ProcessorExpert.c **** 			break;
+ 433              		.loc 1 174 0
+ 434 0170 D5E0     		b	.L7
+ 435              	.L18:
+ 175:../Sources/ProcessorExpert.c **** 		case 0x9	:	//something front and back, zero turn right, then forward
+ 176:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rBack);
+ 436              		.loc 1 176 0
+ 437 0172 6E4B     		ldr	r3, .L27+8
+ 438 0174 1A69     		ldr	r2, [r3, #16]
+ 439 0176 704B     		ldr	r3, .L27+20
+ 440 0178 101C     		mov	r0, r2
+ 441 017a 191C     		mov	r1, r3
+ 442 017c FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 177:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 443              		.loc 1 177 0
+ 444 0180 6A4B     		ldr	r3, .L27+8
+ 445 0182 5A69     		ldr	r2, [r3, #20]
+ 446 0184 6C4B     		ldr	r3, .L27+20
+ 447 0186 101C     		mov	r0, r2
+ 448 0188 191C     		mov	r1, r3
+ 449 018a FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 178:../Sources/ProcessorExpert.c **** 			w_Waitms(Twait/2);
+ 450              		.loc 1 178 0
+ 451 018e AF23     		mov	r3, #175
+ 452 0190 5B00     		lsl	r3, r3, #1
+ 453 0192 181C     		mov	r0, r3
+ 454 0194 FFF7FEFF 		bl	w_Waitms
+ 179:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 455              		.loc 1 179 0
+ 456 0198 644B     		ldr	r3, .L27+8
+ 457 019a 1A69     		ldr	r2, [r3, #16]
+ 458 019c 654B     		ldr	r3, .L27+16
+ 459 019e 101C     		mov	r0, r2
+ 460 01a0 191C     		mov	r1, r3
+ 461 01a2 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 180:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 462              		.loc 1 180 0
+ 463 01a6 614B     		ldr	r3, .L27+8
+ 464 01a8 5A69     		ldr	r2, [r3, #20]
+ 465 01aa 634B     		ldr	r3, .L27+20
+ 466 01ac 101C     		mov	r0, r2
+ 467 01ae 191C     		mov	r1, r3
+ 468 01b0 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 181:../Sources/ProcessorExpert.c **** 			break;
+ 469              		.loc 1 181 0
+ 470 01b4 B3E0     		b	.L7
+ 471              	.L19:
+ 182:../Sources/ProcessorExpert.c **** 		case 0xA	:	//something front and left, turn left, then backward
+ 183:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 472              		.loc 1 183 0
+ 473 01b6 5D4B     		ldr	r3, .L27+8
+ 474 01b8 1A69     		ldr	r2, [r3, #16]
+ 475 01ba 5E4B     		ldr	r3, .L27+16
+ 476 01bc 101C     		mov	r0, r2
+ 477 01be 191C     		mov	r1, r3
+ 478 01c0 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 184:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 479              		.loc 1 184 0
+ 480 01c4 594B     		ldr	r3, .L27+8
+ 481 01c6 5A69     		ldr	r2, [r3, #20]
+ 482 01c8 5A4B     		ldr	r3, .L27+16
+ 483 01ca 101C     		mov	r0, r2
+ 484 01cc 191C     		mov	r1, r3
+ 485 01ce FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 185:../Sources/ProcessorExpert.c **** 			w_Waitms(Twait);
+ 486              		.loc 1 185 0
+ 487 01d2 AF23     		mov	r3, #175
+ 488 01d4 9B00     		lsl	r3, r3, #2
+ 489 01d6 181C     		mov	r0, r3
+ 490 01d8 FFF7FEFF 		bl	w_Waitms
+ 186:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rBack);
+ 491              		.loc 1 186 0
+ 492 01dc 534B     		ldr	r3, .L27+8
+ 493 01de 1A69     		ldr	r2, [r3, #16]
+ 494 01e0 554B     		ldr	r3, .L27+20
+ 495 01e2 101C     		mov	r0, r2
+ 496 01e4 191C     		mov	r1, r3
+ 497 01e6 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 187:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 498              		.loc 1 187 0
+ 499 01ea 504B     		ldr	r3, .L27+8
+ 500 01ec 5A69     		ldr	r2, [r3, #20]
+ 501 01ee 514B     		ldr	r3, .L27+16
+ 502 01f0 101C     		mov	r0, r2
+ 503 01f2 191C     		mov	r1, r3
+ 504 01f4 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 188:../Sources/ProcessorExpert.c **** 			break;
+ 505              		.loc 1 188 0
+ 506 01f8 91E0     		b	.L7
+ 507              	.L20:
+ 189:../Sources/ProcessorExpert.c **** 		case 0xB	:	//something left, front, and back, zero turn right, then forward
+ 190:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rBack);
+ 508              		.loc 1 190 0
+ 509 01fa 4C4B     		ldr	r3, .L27+8
+ 510 01fc 1A69     		ldr	r2, [r3, #16]
+ 511 01fe 4E4B     		ldr	r3, .L27+20
+ 512 0200 101C     		mov	r0, r2
+ 513 0202 191C     		mov	r1, r3
+ 514 0204 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 191:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 515              		.loc 1 191 0
+ 516 0208 484B     		ldr	r3, .L27+8
+ 517 020a 5A69     		ldr	r2, [r3, #20]
+ 518 020c 4A4B     		ldr	r3, .L27+20
+ 519 020e 101C     		mov	r0, r2
+ 520 0210 191C     		mov	r1, r3
+ 521 0212 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 192:../Sources/ProcessorExpert.c **** 			w_Waitms(Twait);
+ 522              		.loc 1 192 0
+ 523 0216 AF23     		mov	r3, #175
+ 524 0218 9B00     		lsl	r3, r3, #2
+ 525 021a 181C     		mov	r0, r3
+ 526 021c FFF7FEFF 		bl	w_Waitms
+ 193:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 527              		.loc 1 193 0
+ 528 0220 424B     		ldr	r3, .L27+8
+ 529 0222 1A69     		ldr	r2, [r3, #16]
+ 530 0224 434B     		ldr	r3, .L27+16
+ 531 0226 101C     		mov	r0, r2
+ 532 0228 191C     		mov	r1, r3
+ 533 022a FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 194:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 534              		.loc 1 194 0
+ 535 022e 3F4B     		ldr	r3, .L27+8
+ 536 0230 5A69     		ldr	r2, [r3, #20]
+ 537 0232 414B     		ldr	r3, .L27+20
+ 538 0234 101C     		mov	r0, r2
+ 539 0236 191C     		mov	r1, r3
+ 540 0238 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 195:../Sources/ProcessorExpert.c **** 			break;
+ 541              		.loc 1 195 0
+ 542 023c 6FE0     		b	.L7
+ 543              	.L21:
+ 196:../Sources/ProcessorExpert.c **** 		case 0xC	:	//something front and right, turn right, then backward
+ 197:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rBack);
+ 544              		.loc 1 197 0
+ 545 023e 3B4B     		ldr	r3, .L27+8
+ 546 0240 1A69     		ldr	r2, [r3, #16]
+ 547 0242 3D4B     		ldr	r3, .L27+20
+ 548 0244 101C     		mov	r0, r2
+ 549 0246 191C     		mov	r1, r3
+ 550 0248 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 198:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 551              		.loc 1 198 0
+ 552 024c 374B     		ldr	r3, .L27+8
+ 553 024e 5A69     		ldr	r2, [r3, #20]
+ 554 0250 394B     		ldr	r3, .L27+20
+ 555 0252 101C     		mov	r0, r2
+ 556 0254 191C     		mov	r1, r3
+ 557 0256 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 199:../Sources/ProcessorExpert.c **** 			w_Waitms(Twait/2);
+ 558              		.loc 1 199 0
+ 559 025a AF23     		mov	r3, #175
+ 560 025c 5B00     		lsl	r3, r3, #1
+ 561 025e 181C     		mov	r0, r3
+ 562 0260 FFF7FEFF 		bl	w_Waitms
+ 200:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rBack);
+ 563              		.loc 1 200 0
+ 564 0264 314B     		ldr	r3, .L27+8
+ 565 0266 1A69     		ldr	r2, [r3, #16]
+ 566 0268 334B     		ldr	r3, .L27+20
+ 567 026a 101C     		mov	r0, r2
+ 568 026c 191C     		mov	r1, r3
+ 569 026e FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 201:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 570              		.loc 1 201 0
+ 571 0272 2E4B     		ldr	r3, .L27+8
+ 572 0274 5A69     		ldr	r2, [r3, #20]
+ 573 0276 2F4B     		ldr	r3, .L27+16
+ 574 0278 101C     		mov	r0, r2
+ 575 027a 191C     		mov	r1, r3
+ 576 027c FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 202:../Sources/ProcessorExpert.c **** 			break;
+ 577              		.loc 1 202 0
+ 578 0280 4DE0     		b	.L7
+ 579              	.L22:
+ 203:../Sources/ProcessorExpert.c **** 		case 0xD	:	//something front, right, and rear, zero turn left, then foward
+ 204:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 580              		.loc 1 204 0
+ 581 0282 2A4B     		ldr	r3, .L27+8
+ 582 0284 1A69     		ldr	r2, [r3, #16]
+ 583 0286 2B4B     		ldr	r3, .L27+16
+ 584 0288 101C     		mov	r0, r2
+ 585 028a 191C     		mov	r1, r3
+ 586 028c FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 205:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 587              		.loc 1 205 0
+ 588 0290 264B     		ldr	r3, .L27+8
+ 589 0292 5A69     		ldr	r2, [r3, #20]
+ 590 0294 274B     		ldr	r3, .L27+16
+ 591 0296 101C     		mov	r0, r2
+ 592 0298 191C     		mov	r1, r3
+ 593 029a FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 206:../Sources/ProcessorExpert.c **** 			w_Waitms(Twait);
+ 594              		.loc 1 206 0
+ 595 029e AF23     		mov	r3, #175
+ 596 02a0 9B00     		lsl	r3, r3, #2
+ 597 02a2 181C     		mov	r0, r3
+ 598 02a4 FFF7FEFF 		bl	w_Waitms
+ 207:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 599              		.loc 1 207 0
+ 600 02a8 204B     		ldr	r3, .L27+8
+ 601 02aa 1A69     		ldr	r2, [r3, #16]
+ 602 02ac 214B     		ldr	r3, .L27+16
+ 603 02ae 101C     		mov	r0, r2
+ 604 02b0 191C     		mov	r1, r3
+ 605 02b2 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 208:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lFwd);
+ 606              		.loc 1 208 0
+ 607 02b6 1D4B     		ldr	r3, .L27+8
+ 608 02b8 5A69     		ldr	r2, [r3, #20]
+ 609 02ba 1F4B     		ldr	r3, .L27+20
+ 610 02bc 101C     		mov	r0, r2
+ 611 02be 191C     		mov	r1, r3
+ 612 02c0 FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 209:../Sources/ProcessorExpert.c **** 			break;
+ 613              		.loc 1 209 0
+ 614 02c4 2BE0     		b	.L7
+ 615              	.L23:
+ 210:../Sources/ProcessorExpert.c **** 		case 0xE	:	//something foward, left, and right, move backward
+ 211:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rBack);
+ 616              		.loc 1 211 0
+ 617 02c6 194B     		ldr	r3, .L27+8
+ 618 02c8 1A69     		ldr	r2, [r3, #16]
+ 619 02ca 1B4B     		ldr	r3, .L27+20
+ 620 02cc 101C     		mov	r0, r2
+ 621 02ce 191C     		mov	r1, r3
+ 622 02d0 FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 212:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 623              		.loc 1 212 0
+ 624 02d4 154B     		ldr	r3, .L27+8
+ 625 02d6 5A69     		ldr	r2, [r3, #20]
+ 626 02d8 164B     		ldr	r3, .L27+16
+ 627 02da 101C     		mov	r0, r2
+ 628 02dc 191C     		mov	r1, r3
+ 629 02de FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 213:../Sources/ProcessorExpert.c **** 			break;
+ 630              		.loc 1 213 0
+ 631 02e2 1CE0     		b	.L7
+ 632              	.L24:
+ 214:../Sources/ProcessorExpert.c **** 		case 0xF	:	//sensors detect everything!! spin in a circle until clear.
+ 215:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(rFwd);
+ 633              		.loc 1 215 0
+ 634 02e4 114B     		ldr	r3, .L27+8
+ 635 02e6 1A69     		ldr	r2, [r3, #16]
+ 636 02e8 124B     		ldr	r3, .L27+16
+ 637 02ea 101C     		mov	r0, r2
+ 638 02ec 191C     		mov	r1, r3
+ 639 02ee FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 216:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(lBack);
+ 640              		.loc 1 216 0
+ 641 02f2 0E4B     		ldr	r3, .L27+8
+ 642 02f4 5A69     		ldr	r2, [r3, #20]
+ 643 02f6 0F4B     		ldr	r3, .L27+16
+ 644 02f8 101C     		mov	r0, r2
+ 645 02fa 191C     		mov	r1, r3
+ 646 02fc FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 217:../Sources/ProcessorExpert.c **** 			break;
+ 647              		.loc 1 217 0
+ 648 0300 0DE0     		b	.L7
+ 649              	.L8:
+ 218:../Sources/ProcessorExpert.c **** 		default		:
+ 219:../Sources/ProcessorExpert.c **** 			right_SetDutyUS(stop);
+ 650              		.loc 1 219 0
+ 651 0302 0A4B     		ldr	r3, .L27+8
+ 652 0304 1A69     		ldr	r2, [r3, #16]
+ 653 0306 0A4B     		ldr	r3, .L27+12
+ 654 0308 101C     		mov	r0, r2
+ 655 030a 191C     		mov	r1, r3
+ 656 030c FFF7FEFF 		bl	PwmLdd1_SetDutyUS
+ 220:../Sources/ProcessorExpert.c **** 			left_SetDutyUS(stop);
+ 657              		.loc 1 220 0
+ 658 0310 064B     		ldr	r3, .L27+8
+ 659 0312 5A69     		ldr	r2, [r3, #20]
+ 660 0314 064B     		ldr	r3, .L27+12
+ 661 0316 101C     		mov	r0, r2
+ 662 0318 191C     		mov	r1, r3
+ 663 031a FFF7FEFF 		bl	PwmLdd2_SetDutyUS
+ 664              	.L7:
+ 221:../Sources/ProcessorExpert.c **** 		}
+ 222:../Sources/ProcessorExpert.c **** }
+ 665              		.loc 1 222 0
+ 666 031e BD46     		mov	sp, r7
+ 667              		@ sp needed for prologue
+ 668 0320 80BD     		pop	{r7, pc}
+ 669              	.L28:
+ 670 0322 C046     		.align	2
+ 671              	.L27:
+ 672 0324 00000000 		.word	sensors
+ 673 0328 00000000 		.word	.L25
+ 674 032c 00000000 		.word	PE_LDD_DeviceDataList
+ 675 0330 14500000 		.word	20500
+ 676 0334 DC500000 		.word	20700
+ 677 0338 4C4F0000 		.word	20300
+ 678              		.cfi_endproc
+ 679              	.LFE1:
+ 681              		.section	.rodata
+ 682              		.align	2
+ 683              	.LC7:
+ 684 0000 48656C6C 		.ascii	"Hello!\015\000"
+ 684      6F210D00 
+ 685              		.section	.text.main,"ax",%progbits
+ 686              		.align	2
+ 687              		.global	main
+ 688              		.code	16
+ 689              		.thumb_func
+ 691              	main:
+ 692              	.LFB2:
+ 223:../Sources/ProcessorExpert.c **** 
+ 224:../Sources/ProcessorExpert.c **** /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
+ 225:../Sources/ProcessorExpert.c **** int main(void){
+ 693              		.loc 1 225 0
+ 694              		.cfi_startproc
+ 695 0000 80B5     		push	{r7, lr}
+ 696              	.LCFI5:
+ 697              		.cfi_def_cfa_offset 8
+ 698              		.cfi_offset 7, -8
+ 699              		.cfi_offset 14, -4
+ 700 0002 84B0     		sub	sp, sp, #16
+ 701              	.LCFI6:
+ 702              		.cfi_def_cfa_offset 24
+ 703 0004 00AF     		add	r7, sp, #0
+ 704              	.LCFI7:
+ 705              		.cfi_def_cfa_register 7
+ 226:../Sources/ProcessorExpert.c **** 	/*lint -restore Enable MISRA rule (6.3) checking. */
+ 227:../Sources/ProcessorExpert.c **** 	/* Write your local variable definition here */
+ 228:../Sources/ProcessorExpert.c **** 	int i = 0;
+ 706              		.loc 1 228 0
+ 707 0006 0023     		mov	r3, #0
+ 708 0008 FB60     		str	r3, [r7, #12]
+ 229:../Sources/ProcessorExpert.c **** 	int n = 0;
+ 709              		.loc 1 229 0
+ 710 000a 0023     		mov	r3, #0
+ 711 000c BB60     		str	r3, [r7, #8]
+ 230:../Sources/ProcessorExpert.c **** 	int movWait = 0;
+ 712              		.loc 1 230 0
+ 713 000e 0023     		mov	r3, #0
+ 714 0010 7B60     		str	r3, [r7, #4]
+ 231:../Sources/ProcessorExpert.c **** 	/*** Processor Expert internal initialization. DON'T REMOVE THIS CODE!!! ***/
+ 232:../Sources/ProcessorExpert.c **** 	PE_low_level_init();
+ 715              		.loc 1 232 0
+ 716 0012 FFF7FEFF 		bl	PE_low_level_init
+ 233:../Sources/ProcessorExpert.c **** 	/*** End of Processor Expert internal initialization.                    ***/
+ 234:../Sources/ProcessorExpert.c **** 	printf ("Hello!\r\n");
+ 717              		.loc 1 234 0
+ 718 0016 824B     		ldr	r3, .L60
+ 719 0018 181C     		mov	r0, r3
+ 720 001a FFF7FEFF 		bl	puts
+ 235:../Sources/ProcessorExpert.c **** 
+ 236:../Sources/ProcessorExpert.c **** 	// reset flag 
+ 237:../Sources/ProcessorExpert.c **** 	Measured = FALSE;
+ 721              		.loc 1 237 0
+ 722 001e 814B     		ldr	r3, .L60+4
+ 723 0020 0022     		mov	r2, #0
+ 724 0022 1A70     		strb	r2, [r3]
+ 238:../Sources/ProcessorExpert.c **** 	
+ 239:../Sources/ProcessorExpert.c **** 	// Initialize ADC now
+ 240:../Sources/ProcessorExpert.c **** 	ADC1_Init();
+ 725              		.loc 1 240 0
+ 726 0024 FFF7FEFF 		bl	ADC1_Init
+ 241:../Sources/ProcessorExpert.c **** 	// Initialize DMA now  
+ 242:../Sources/ProcessorExpert.c **** 	DMA1_Init();
+ 727              		.loc 1 242 0
+ 728 0028 FFF7FEFF 		bl	DMA1_Init
+ 243:../Sources/ProcessorExpert.c **** 	IR_Init();
+ 729              		.loc 1 243 0
+ 730 002c 7E4B     		ldr	r3, .L60+8
+ 731 002e 9B68     		ldr	r3, [r3, #8]
+ 732 0030 181C     		mov	r0, r3
+ 733 0032 FFF7FEFF 		bl	BitIoLdd1_SetVal
+ 244:../Sources/ProcessorExpert.c **** 	IR_Put(1);
+ 734              		.loc 1 244 0
+ 735 0036 7C4B     		ldr	r3, .L60+8
+ 736 0038 9B68     		ldr	r3, [r3, #8]
+ 737 003a 181C     		mov	r0, r3
+ 738 003c FFF7FEFF 		bl	BitIoLdd1_ClrVal
+ 739 0040 00E0     		b	.L58
+ 740              	.L59:
+ 245:../Sources/ProcessorExpert.c **** 	// loop forever  
+ 246:../Sources/ProcessorExpert.c **** 	while (TRUE) {
+ 247:../Sources/ProcessorExpert.c **** 		for(i = 0; i<ADC_CHANNELS_COUNT; i++){
+ 248:../Sources/ProcessorExpert.c **** 				AllMeasures[i] = 0;
+ 249:../Sources/ProcessorExpert.c **** 		}
+ 250:../Sources/ProcessorExpert.c **** 		for (i=0; i<samples; i++){
+ 251:../Sources/ProcessorExpert.c **** 			//Turn LEDs off
+ 252:../Sources/ProcessorExpert.c **** 			IR_Put(1);
+ 253:../Sources/ProcessorExpert.c **** 			w_Waitus(T);
+ 254:../Sources/ProcessorExpert.c **** 			getADC();
+ 255:../Sources/ProcessorExpert.c **** 
+ 256:../Sources/ProcessorExpert.c **** 
+ 257:../Sources/ProcessorExpert.c **** 			for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 258:../Sources/ProcessorExpert.c **** 				FirstVals[n] = MeasuredValues[n];
+ 259:../Sources/ProcessorExpert.c **** 			}
+ 260:../Sources/ProcessorExpert.c **** 
+ 261:../Sources/ProcessorExpert.c **** 			//Turn LEDs on
+ 262:../Sources/ProcessorExpert.c **** 			IR_Put(0);
+ 263:../Sources/ProcessorExpert.c **** 			w_Waitus(T);
+ 264:../Sources/ProcessorExpert.c **** 			getADC();
+ 265:../Sources/ProcessorExpert.c **** 
+ 266:../Sources/ProcessorExpert.c **** 			for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 267:../Sources/ProcessorExpert.c **** 				AllMeasures[n] += MeasuredValues[n]-FirstVals[n];
+ 268:../Sources/ProcessorExpert.c **** 			}
+ 269:../Sources/ProcessorExpert.c **** 		}
+ 270:../Sources/ProcessorExpert.c **** 		
+ 271:../Sources/ProcessorExpert.c **** 		for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 272:../Sources/ProcessorExpert.c **** 			CorrectedVals[n] = AllMeasures[n]/samples;
+ 273:../Sources/ProcessorExpert.c **** 			if(CorrectedVals[n] < 0)
+ 274:../Sources/ProcessorExpert.c **** 				CorrectedVals[n] = 0;
+ 275:../Sources/ProcessorExpert.c **** 		}
+ 276:../Sources/ProcessorExpert.c **** 		
+ 277:../Sources/ProcessorExpert.c **** 		// the code below enables the robot kl25z to talk to the
+ 278:../Sources/ProcessorExpert.c **** 		// user through the virtual terminal connected the the SDA Debugger.
+ 279:../Sources/ProcessorExpert.c **** 		// this will output the corrected, averaged samples.
+ 280:../Sources/ProcessorExpert.c **** 		// WARNING: it is advised not to used printf in embedded projects.
+ 281:../Sources/ProcessorExpert.c **** 		// this is because it takes up a lot of memory.
+ 282:../Sources/ProcessorExpert.c **** 		
+ 283:../Sources/ProcessorExpert.c **** //		printf("corrected");
+ 284:../Sources/ProcessorExpert.c **** //		for(i = 0; i<ADC_CHANNELS_COUNT; i++){
+ 285:../Sources/ProcessorExpert.c **** //			printf ("%7u", (int) CorrectedVals[i]);
+ 286:../Sources/ProcessorExpert.c **** //		}
+ 287:../Sources/ProcessorExpert.c **** //		printf("\n");
+ 288:../Sources/ProcessorExpert.c **** 		
+ 289:../Sources/ProcessorExpert.c **** 		/*
+ 290:../Sources/ProcessorExpert.c **** 		 * sensors contains a binary representation of the sensors that 
+ 291:../Sources/ProcessorExpert.c **** 		 * are triggered. sensors will then be analyzed by move() and will
+ 292:../Sources/ProcessorExpert.c **** 		 * move the robot according to what sensors are triggered
+ 293:../Sources/ProcessorExpert.c **** 		 * 
+ 294:../Sources/ProcessorExpert.c **** 		 * bit 0 : Rear
+ 295:../Sources/ProcessorExpert.c **** 		 * bit 1 : Left
+ 296:../Sources/ProcessorExpert.c **** 		 * bit 2 : Right
+ 297:../Sources/ProcessorExpert.c **** 		 * bit 3 : Front
+ 298:../Sources/ProcessorExpert.c **** 		 * 
+ 299:../Sources/ProcessorExpert.c **** 		 */
+ 300:../Sources/ProcessorExpert.c **** 		for(i=0; i<SensNum; i++){
+ 301:../Sources/ProcessorExpert.c **** 			if(CorrectedVals[i]>sens){
+ 302:../Sources/ProcessorExpert.c **** 				switch(i){
+ 303:../Sources/ProcessorExpert.c **** 				case 0	:
+ 304:../Sources/ProcessorExpert.c **** 					sensors |= 0x1;
+ 305:../Sources/ProcessorExpert.c **** 					break;
+ 306:../Sources/ProcessorExpert.c **** 				case 1	:
+ 307:../Sources/ProcessorExpert.c **** 					sensors |= 0x2;
+ 308:../Sources/ProcessorExpert.c **** 					break;
+ 309:../Sources/ProcessorExpert.c **** 				case 2	:
+ 310:../Sources/ProcessorExpert.c **** 					sensors |= 0x4;
+ 311:../Sources/ProcessorExpert.c **** 					break;
+ 312:../Sources/ProcessorExpert.c **** 				case 3	:
+ 313:../Sources/ProcessorExpert.c **** 					sensors |= 0x8;
+ 314:../Sources/ProcessorExpert.c **** 					break;
+ 315:../Sources/ProcessorExpert.c **** 				}
+ 316:../Sources/ProcessorExpert.c **** 			}
+ 317:../Sources/ProcessorExpert.c **** 			else
+ 318:../Sources/ProcessorExpert.c **** 				switch(i){
+ 319:../Sources/ProcessorExpert.c **** 				case 0	:
+ 320:../Sources/ProcessorExpert.c **** 					sensors &= ~0x1;
+ 321:../Sources/ProcessorExpert.c **** 					break;
+ 322:../Sources/ProcessorExpert.c **** 				case 1	:
+ 323:../Sources/ProcessorExpert.c **** 					sensors &= ~0x2;
+ 324:../Sources/ProcessorExpert.c **** 					break;
+ 325:../Sources/ProcessorExpert.c **** 				case 2	:
+ 326:../Sources/ProcessorExpert.c **** 					sensors &= ~0x4;
+ 327:../Sources/ProcessorExpert.c **** 					break;
+ 328:../Sources/ProcessorExpert.c **** 				case 3	:
+ 329:../Sources/ProcessorExpert.c **** 					sensors &= ~0x8;
+ 330:../Sources/ProcessorExpert.c **** 					break;
+ 331:../Sources/ProcessorExpert.c **** 				}
+ 332:../Sources/ProcessorExpert.c **** 		}
+ 333:../Sources/ProcessorExpert.c **** 		
+ 334:../Sources/ProcessorExpert.c **** 		// Make the movements a bit less jittery by adding a delay
+ 335:../Sources/ProcessorExpert.c **** 		// to changing the direction of rotation to the servos.
+ 336:../Sources/ProcessorExpert.c **** 		movWait += 1;
+ 337:../Sources/ProcessorExpert.c **** 		if(movWait >= 10){
+ 338:../Sources/ProcessorExpert.c **** 			movWait = 0;
+ 339:../Sources/ProcessorExpert.c **** 			move();
+ 340:../Sources/ProcessorExpert.c **** 
+ 341:../Sources/ProcessorExpert.c **** //			This commented code is used for calibration of servos.
+ 342:../Sources/ProcessorExpert.c **** //			right_SetDutyUS(stop);
+ 343:../Sources/ProcessorExpert.c **** //			left_SetDutyUS(stop);
+ 344:../Sources/ProcessorExpert.c **** 			
+ 345:../Sources/ProcessorExpert.c **** 		}
+ 346:../Sources/ProcessorExpert.c **** 	}
+ 741              		.loc 1 346 0
+ 742 0042 C046     		mov	r8, r8
+ 743              	.L58:
+ 247:../Sources/ProcessorExpert.c **** 		for(i = 0; i<ADC_CHANNELS_COUNT; i++){
+ 744              		.loc 1 247 0
+ 745 0044 0023     		mov	r3, #0
+ 746 0046 FB60     		str	r3, [r7, #12]
+ 747 0048 07E0     		b	.L30
+ 748              	.L31:
+ 248:../Sources/ProcessorExpert.c **** 				AllMeasures[i] = 0;
+ 749              		.loc 1 248 0
+ 750 004a 784B     		ldr	r3, .L60+12
+ 751 004c FA68     		ldr	r2, [r7, #12]
+ 752 004e 9200     		lsl	r2, r2, #2
+ 753 0050 0021     		mov	r1, #0
+ 754 0052 D150     		str	r1, [r2, r3]
+ 247:../Sources/ProcessorExpert.c **** 		for(i = 0; i<ADC_CHANNELS_COUNT; i++){
+ 755              		.loc 1 247 0
+ 756 0054 FB68     		ldr	r3, [r7, #12]
+ 757 0056 0133     		add	r3, r3, #1
+ 758 0058 FB60     		str	r3, [r7, #12]
+ 759              	.L30:
+ 247:../Sources/ProcessorExpert.c **** 		for(i = 0; i<ADC_CHANNELS_COUNT; i++){
+ 760              		.loc 1 247 0 is_stmt 0
+ 761 005a FB68     		ldr	r3, [r7, #12]
+ 762 005c 032B     		cmp	r3, #3
+ 763 005e F4DD     		ble	.L31
+ 250:../Sources/ProcessorExpert.c **** 		for (i=0; i<samples; i++){
+ 764              		.loc 1 250 0 is_stmt 1
+ 765 0060 0023     		mov	r3, #0
+ 766 0062 FB60     		str	r3, [r7, #12]
+ 767 0064 43E0     		b	.L32
+ 768              	.L37:
+ 252:../Sources/ProcessorExpert.c **** 			IR_Put(1);
+ 769              		.loc 1 252 0
+ 770 0066 704B     		ldr	r3, .L60+8
+ 771 0068 9B68     		ldr	r3, [r3, #8]
+ 772 006a 181C     		mov	r0, r3
+ 773 006c FFF7FEFF 		bl	BitIoLdd1_ClrVal
+ 253:../Sources/ProcessorExpert.c **** 			w_Waitus(T);
+ 774              		.loc 1 253 0
+ 775 0070 0120     		mov	r0, #1
+ 776 0072 FFF7FEFF 		bl	w_Waitms
+ 254:../Sources/ProcessorExpert.c **** 			getADC();
+ 777              		.loc 1 254 0
+ 778 0076 FFF7FEFF 		bl	getADC
+ 257:../Sources/ProcessorExpert.c **** 			for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 779              		.loc 1 257 0
+ 780 007a 0023     		mov	r3, #0
+ 781 007c BB60     		str	r3, [r7, #8]
+ 782 007e 0AE0     		b	.L33
+ 783              	.L34:
+ 258:../Sources/ProcessorExpert.c **** 				FirstVals[n] = MeasuredValues[n];
+ 784              		.loc 1 258 0
+ 785 0080 6B4B     		ldr	r3, .L60+16
+ 786 0082 BA68     		ldr	r2, [r7, #8]
+ 787 0084 5200     		lsl	r2, r2, #1
+ 788 0086 D15A     		ldrh	r1, [r2, r3]
+ 789 0088 6A4B     		ldr	r3, .L60+20
+ 790 008a BA68     		ldr	r2, [r7, #8]
+ 791 008c 5200     		lsl	r2, r2, #1
+ 792 008e D152     		strh	r1, [r2, r3]
+ 257:../Sources/ProcessorExpert.c **** 			for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 793              		.loc 1 257 0
+ 794 0090 BB68     		ldr	r3, [r7, #8]
+ 795 0092 0133     		add	r3, r3, #1
+ 796 0094 BB60     		str	r3, [r7, #8]
+ 797              	.L33:
+ 257:../Sources/ProcessorExpert.c **** 			for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 798              		.loc 1 257 0 is_stmt 0
+ 799 0096 BB68     		ldr	r3, [r7, #8]
+ 800 0098 032B     		cmp	r3, #3
+ 801 009a F1DD     		ble	.L34
+ 262:../Sources/ProcessorExpert.c **** 			IR_Put(0);
+ 802              		.loc 1 262 0 is_stmt 1
+ 803 009c 624B     		ldr	r3, .L60+8
+ 804 009e 9B68     		ldr	r3, [r3, #8]
+ 805 00a0 181C     		mov	r0, r3
+ 806 00a2 FFF7FEFF 		bl	BitIoLdd1_SetVal
+ 263:../Sources/ProcessorExpert.c **** 			w_Waitus(T);
+ 807              		.loc 1 263 0
+ 808 00a6 0120     		mov	r0, #1
+ 809 00a8 FFF7FEFF 		bl	w_Waitms
+ 264:../Sources/ProcessorExpert.c **** 			getADC();
+ 810              		.loc 1 264 0
+ 811 00ac FFF7FEFF 		bl	getADC
+ 266:../Sources/ProcessorExpert.c **** 			for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 812              		.loc 1 266 0
+ 813 00b0 0023     		mov	r3, #0
+ 814 00b2 BB60     		str	r3, [r7, #8]
+ 815 00b4 15E0     		b	.L35
+ 816              	.L36:
+ 267:../Sources/ProcessorExpert.c **** 				AllMeasures[n] += MeasuredValues[n]-FirstVals[n];
+ 817              		.loc 1 267 0
+ 818 00b6 5D4B     		ldr	r3, .L60+12
+ 819 00b8 BA68     		ldr	r2, [r7, #8]
+ 820 00ba 9200     		lsl	r2, r2, #2
+ 821 00bc D258     		ldr	r2, [r2, r3]
+ 822 00be 5C4B     		ldr	r3, .L60+16
+ 823 00c0 B968     		ldr	r1, [r7, #8]
+ 824 00c2 4900     		lsl	r1, r1, #1
+ 825 00c4 CB5A     		ldrh	r3, [r1, r3]
+ 826 00c6 191C     		mov	r1, r3
+ 827 00c8 5A4B     		ldr	r3, .L60+20
+ 828 00ca B868     		ldr	r0, [r7, #8]
+ 829 00cc 4000     		lsl	r0, r0, #1
+ 830 00ce C35A     		ldrh	r3, [r0, r3]
+ 831 00d0 CB1A     		sub	r3, r1, r3
+ 832 00d2 D118     		add	r1, r2, r3
+ 833 00d4 554B     		ldr	r3, .L60+12
+ 834 00d6 BA68     		ldr	r2, [r7, #8]
+ 835 00d8 9200     		lsl	r2, r2, #2
+ 836 00da D150     		str	r1, [r2, r3]
+ 266:../Sources/ProcessorExpert.c **** 			for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 837              		.loc 1 266 0
+ 838 00dc BB68     		ldr	r3, [r7, #8]
+ 839 00de 0133     		add	r3, r3, #1
+ 840 00e0 BB60     		str	r3, [r7, #8]
+ 841              	.L35:
+ 266:../Sources/ProcessorExpert.c **** 			for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 842              		.loc 1 266 0 is_stmt 0
+ 843 00e2 BB68     		ldr	r3, [r7, #8]
+ 844 00e4 032B     		cmp	r3, #3
+ 845 00e6 E6DD     		ble	.L36
+ 250:../Sources/ProcessorExpert.c **** 		for (i=0; i<samples; i++){
+ 846              		.loc 1 250 0 is_stmt 1
+ 847 00e8 FB68     		ldr	r3, [r7, #12]
+ 848 00ea 0133     		add	r3, r3, #1
+ 849 00ec FB60     		str	r3, [r7, #12]
+ 850              	.L32:
+ 250:../Sources/ProcessorExpert.c **** 		for (i=0; i<samples; i++){
+ 851              		.loc 1 250 0 is_stmt 0
+ 852 00ee FB68     		ldr	r3, [r7, #12]
+ 853 00f0 032B     		cmp	r3, #3
+ 854 00f2 B8DD     		ble	.L37
+ 271:../Sources/ProcessorExpert.c **** 		for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 855              		.loc 1 271 0 is_stmt 1
+ 856 00f4 0023     		mov	r3, #0
+ 857 00f6 BB60     		str	r3, [r7, #8]
+ 858 00f8 1AE0     		b	.L38
+ 859              	.L41:
+ 272:../Sources/ProcessorExpert.c **** 			CorrectedVals[n] = AllMeasures[n]/samples;
+ 860              		.loc 1 272 0
+ 861 00fa 4C4B     		ldr	r3, .L60+12
+ 862 00fc BA68     		ldr	r2, [r7, #8]
+ 863 00fe 9200     		lsl	r2, r2, #2
+ 864 0100 D358     		ldr	r3, [r2, r3]
+ 865 0102 002B     		cmp	r3, #0
+ 866 0104 00DA     		bge	.L39
+ 867 0106 0333     		add	r3, r3, #3
+ 868              	.L39:
+ 869 0108 9B10     		asr	r3, r3, #2
+ 870 010a 191C     		mov	r1, r3
+ 871 010c 4A4B     		ldr	r3, .L60+24
+ 872 010e BA68     		ldr	r2, [r7, #8]
+ 873 0110 9200     		lsl	r2, r2, #2
+ 874 0112 D150     		str	r1, [r2, r3]
+ 273:../Sources/ProcessorExpert.c **** 			if(CorrectedVals[n] < 0)
+ 875              		.loc 1 273 0
+ 876 0114 484B     		ldr	r3, .L60+24
+ 877 0116 BA68     		ldr	r2, [r7, #8]
+ 878 0118 9200     		lsl	r2, r2, #2
+ 879 011a D358     		ldr	r3, [r2, r3]
+ 880 011c 002B     		cmp	r3, #0
+ 881 011e 04DA     		bge	.L40
+ 274:../Sources/ProcessorExpert.c **** 				CorrectedVals[n] = 0;
+ 882              		.loc 1 274 0
+ 883 0120 454B     		ldr	r3, .L60+24
+ 884 0122 BA68     		ldr	r2, [r7, #8]
+ 885 0124 9200     		lsl	r2, r2, #2
+ 886 0126 0021     		mov	r1, #0
+ 887 0128 D150     		str	r1, [r2, r3]
+ 888              	.L40:
+ 271:../Sources/ProcessorExpert.c **** 		for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 889              		.loc 1 271 0
+ 890 012a BB68     		ldr	r3, [r7, #8]
+ 891 012c 0133     		add	r3, r3, #1
+ 892 012e BB60     		str	r3, [r7, #8]
+ 893              	.L38:
+ 271:../Sources/ProcessorExpert.c **** 		for(n = 0; n<ADC_CHANNELS_COUNT; n++){
+ 894              		.loc 1 271 0 is_stmt 0
+ 895 0130 BB68     		ldr	r3, [r7, #8]
+ 896 0132 032B     		cmp	r3, #3
+ 897 0134 E1DD     		ble	.L41
+ 300:../Sources/ProcessorExpert.c **** 		for(i=0; i<SensNum; i++){
+ 898              		.loc 1 300 0 is_stmt 1
+ 899 0136 0023     		mov	r3, #0
+ 900 0138 FB60     		str	r3, [r7, #12]
+ 901 013a 61E0     		b	.L42
+ 902              	.L56:
+ 301:../Sources/ProcessorExpert.c **** 			if(CorrectedVals[i]>sens){
+ 903              		.loc 1 301 0
+ 904 013c 3E4B     		ldr	r3, .L60+24
+ 905 013e FA68     		ldr	r2, [r7, #12]
+ 906 0140 9200     		lsl	r2, r2, #2
+ 907 0142 D358     		ldr	r3, [r2, r3]
+ 908 0144 C82B     		cmp	r3, #200
+ 909 0146 28DD     		ble	.L43
+ 302:../Sources/ProcessorExpert.c **** 				switch(i){
+ 910              		.loc 1 302 0
+ 911 0148 FB68     		ldr	r3, [r7, #12]
+ 912 014a 012B     		cmp	r3, #1
+ 913 014c 0FD0     		beq	.L46
+ 914 014e 02DC     		bgt	.L49
+ 915 0150 002B     		cmp	r3, #0
+ 916 0152 05D0     		beq	.L45
+ 917 0154 51E0     		b	.L50
+ 918              	.L49:
+ 919 0156 022B     		cmp	r3, #2
+ 920 0158 10D0     		beq	.L47
+ 921 015a 032B     		cmp	r3, #3
+ 922 015c 15D0     		beq	.L48
+ 923 015e 4CE0     		b	.L50
+ 924              	.L45:
+ 304:../Sources/ProcessorExpert.c **** 					sensors |= 0x1;
+ 925              		.loc 1 304 0
+ 926 0160 364B     		ldr	r3, .L60+28
+ 927 0162 1B68     		ldr	r3, [r3]
+ 928 0164 0122     		mov	r2, #1
+ 929 0166 1A43     		orr	r2, r3
+ 930 0168 344B     		ldr	r3, .L60+28
+ 931 016a 1A60     		str	r2, [r3]
+ 305:../Sources/ProcessorExpert.c **** 					break;
+ 932              		.loc 1 305 0
+ 933 016c 45E0     		b	.L50
+ 934              	.L46:
+ 307:../Sources/ProcessorExpert.c **** 					sensors |= 0x2;
+ 935              		.loc 1 307 0
+ 936 016e 334B     		ldr	r3, .L60+28
+ 937 0170 1B68     		ldr	r3, [r3]
+ 938 0172 0222     		mov	r2, #2
+ 939 0174 1A43     		orr	r2, r3
+ 940 0176 314B     		ldr	r3, .L60+28
+ 941 0178 1A60     		str	r2, [r3]
+ 308:../Sources/ProcessorExpert.c **** 					break;
+ 942              		.loc 1 308 0
+ 943 017a 3EE0     		b	.L50
+ 944              	.L47:
+ 310:../Sources/ProcessorExpert.c **** 					sensors |= 0x4;
+ 945              		.loc 1 310 0
+ 946 017c 2F4B     		ldr	r3, .L60+28
+ 947 017e 1B68     		ldr	r3, [r3]
+ 948 0180 0422     		mov	r2, #4
+ 949 0182 1A43     		orr	r2, r3
+ 950 0184 2D4B     		ldr	r3, .L60+28
+ 951 0186 1A60     		str	r2, [r3]
+ 311:../Sources/ProcessorExpert.c **** 					break;
+ 952              		.loc 1 311 0
+ 953 0188 37E0     		b	.L50
+ 954              	.L48:
+ 313:../Sources/ProcessorExpert.c **** 					sensors |= 0x8;
+ 955              		.loc 1 313 0
+ 956 018a 2C4B     		ldr	r3, .L60+28
+ 957 018c 1B68     		ldr	r3, [r3]
+ 958 018e 0822     		mov	r2, #8
+ 959 0190 1A43     		orr	r2, r3
+ 960 0192 2A4B     		ldr	r3, .L60+28
+ 961 0194 1A60     		str	r2, [r3]
+ 314:../Sources/ProcessorExpert.c **** 					break;
+ 962              		.loc 1 314 0
+ 963 0196 C046     		mov	r8, r8
+ 964 0198 2FE0     		b	.L50
+ 965              	.L43:
+ 318:../Sources/ProcessorExpert.c **** 				switch(i){
+ 966              		.loc 1 318 0
+ 967 019a FB68     		ldr	r3, [r7, #12]
+ 968 019c 012B     		cmp	r3, #1
+ 969 019e 11D0     		beq	.L52
+ 970 01a0 02DC     		bgt	.L55
+ 971 01a2 002B     		cmp	r3, #0
+ 972 01a4 05D0     		beq	.L51
+ 973 01a6 28E0     		b	.L50
+ 974              	.L55:
+ 975 01a8 022B     		cmp	r3, #2
+ 976 01aa 14D0     		beq	.L53
+ 977 01ac 032B     		cmp	r3, #3
+ 978 01ae 1BD0     		beq	.L54
+ 979 01b0 23E0     		b	.L50
+ 980              	.L51:
+ 320:../Sources/ProcessorExpert.c **** 					sensors &= ~0x1;
+ 981              		.loc 1 320 0
+ 982 01b2 224B     		ldr	r3, .L60+28
+ 983 01b4 1B68     		ldr	r3, [r3]
+ 984 01b6 0122     		mov	r2, #1
+ 985 01b8 191C     		mov	r1, r3
+ 986 01ba 9143     		bic	r1, r2
+ 987 01bc 0A1C     		mov	r2, r1
+ 988 01be 1F4B     		ldr	r3, .L60+28
+ 989 01c0 1A60     		str	r2, [r3]
+ 321:../Sources/ProcessorExpert.c **** 					break;
+ 990              		.loc 1 321 0
+ 991 01c2 1AE0     		b	.L50
+ 992              	.L52:
+ 323:../Sources/ProcessorExpert.c **** 					sensors &= ~0x2;
+ 993              		.loc 1 323 0
+ 994 01c4 1D4B     		ldr	r3, .L60+28
+ 995 01c6 1B68     		ldr	r3, [r3]
+ 996 01c8 0222     		mov	r2, #2
+ 997 01ca 191C     		mov	r1, r3
+ 998 01cc 9143     		bic	r1, r2
+ 999 01ce 0A1C     		mov	r2, r1
+ 1000 01d0 1A4B     		ldr	r3, .L60+28
+ 1001 01d2 1A60     		str	r2, [r3]
+ 324:../Sources/ProcessorExpert.c **** 					break;
+ 1002              		.loc 1 324 0
+ 1003 01d4 11E0     		b	.L50
+ 1004              	.L53:
+ 326:../Sources/ProcessorExpert.c **** 					sensors &= ~0x4;
+ 1005              		.loc 1 326 0
+ 1006 01d6 194B     		ldr	r3, .L60+28
+ 1007 01d8 1B68     		ldr	r3, [r3]
+ 1008 01da 0422     		mov	r2, #4
+ 1009 01dc 191C     		mov	r1, r3
+ 1010 01de 9143     		bic	r1, r2
+ 1011 01e0 0A1C     		mov	r2, r1
+ 1012 01e2 164B     		ldr	r3, .L60+28
+ 1013 01e4 1A60     		str	r2, [r3]
+ 327:../Sources/ProcessorExpert.c **** 					break;
+ 1014              		.loc 1 327 0
+ 1015 01e6 08E0     		b	.L50
+ 1016              	.L54:
+ 329:../Sources/ProcessorExpert.c **** 					sensors &= ~0x8;
+ 1017              		.loc 1 329 0
+ 1018 01e8 144B     		ldr	r3, .L60+28
+ 1019 01ea 1B68     		ldr	r3, [r3]
+ 1020 01ec 0822     		mov	r2, #8
+ 1021 01ee 191C     		mov	r1, r3
+ 1022 01f0 9143     		bic	r1, r2
+ 1023 01f2 0A1C     		mov	r2, r1
+ 1024 01f4 114B     		ldr	r3, .L60+28
+ 1025 01f6 1A60     		str	r2, [r3]
+ 330:../Sources/ProcessorExpert.c **** 					break;
+ 1026              		.loc 1 330 0
+ 1027 01f8 C046     		mov	r8, r8
+ 1028              	.L50:
+ 300:../Sources/ProcessorExpert.c **** 		for(i=0; i<SensNum; i++){
+ 1029              		.loc 1 300 0
+ 1030 01fa FB68     		ldr	r3, [r7, #12]
+ 1031 01fc 0133     		add	r3, r3, #1
+ 1032 01fe FB60     		str	r3, [r7, #12]
+ 1033              	.L42:
+ 300:../Sources/ProcessorExpert.c **** 		for(i=0; i<SensNum; i++){
+ 1034              		.loc 1 300 0 is_stmt 0
+ 1035 0200 FB68     		ldr	r3, [r7, #12]
+ 1036 0202 032B     		cmp	r3, #3
+ 1037 0204 9ADD     		ble	.L56
+ 336:../Sources/ProcessorExpert.c **** 		movWait += 1;
+ 1038              		.loc 1 336 0 is_stmt 1
+ 1039 0206 7B68     		ldr	r3, [r7, #4]
+ 1040 0208 0133     		add	r3, r3, #1
+ 1041 020a 7B60     		str	r3, [r7, #4]
+ 337:../Sources/ProcessorExpert.c **** 		if(movWait >= 10){
+ 1042              		.loc 1 337 0
+ 1043 020c 7B68     		ldr	r3, [r7, #4]
+ 1044 020e 092B     		cmp	r3, #9
+ 1045 0210 00DC     		bgt	.LCB881
+ 1046 0212 16E7     		b	.L59	@long jump
+ 1047              	.LCB881:
+ 338:../Sources/ProcessorExpert.c **** 			movWait = 0;
+ 1048              		.loc 1 338 0
+ 1049 0214 0023     		mov	r3, #0
+ 1050 0216 7B60     		str	r3, [r7, #4]
+ 339:../Sources/ProcessorExpert.c **** 			move();
+ 1051              		.loc 1 339 0
+ 1052 0218 FFF7FEFF 		bl	move
+ 1053              		.loc 1 346 0
+ 1054 021c 11E7     		b	.L59
+ 1055              	.L61:
+ 1056 021e C046     		.align	2
+ 1057              	.L60:
+ 1058 0220 00000000 		.word	.LC7
+ 1059 0224 00000000 		.word	Measured
+ 1060 0228 00000000 		.word	PE_LDD_DeviceDataList
+ 1061 022c 00000000 		.word	AllMeasures
+ 1062 0230 00000000 		.word	MeasuredValues
+ 1063 0234 00000000 		.word	FirstVals
+ 1064 0238 00000000 		.word	CorrectedVals
+ 1065 023c 00000000 		.word	sensors
+ 1066              		.cfi_endproc
+ 1067              	.LFE2:
+ 1069              		.text
+ 1070              	.Letext0:
+ 1071              		.file 2 "C:/Freescale/CW MCU v10.6/MCU/ARM_GCC_Support/ewl/EWL_C/include/cstdint"
+ 1072              		.file 3 "D:/Student Data/Desktop/Embedded/CodeWarrior/Main Work Space/HolleranMouseBot/Generated_C
+ 1073              		.file 4 "C:/Freescale/CW MCU v10.6/MCU/ProcessorExpert/lib/Kinetis/iofiles/MKL25Z4.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 ProcessorExpert.c
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:22     .rodata.ChannelsCfg:00000000 ChannelsCfg
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:19     .rodata.ChannelsCfg:00000000 $d
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:33     .rodata.ChannelsCfg2:00000000 ChannelsCfg2
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:30     .rodata.ChannelsCfg2:00000000 $d
+                            *COM*:00000008 MeasuredValues
+                            *COM*:00000008 FirstVals
+                            *COM*:00000010 AllMeasures
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:43     .bss.CorrectedVals:00000000 $d
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:46     .bss.CorrectedVals:00000000 CorrectedVals
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:53     .bss.sensors:00000000 sensors
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:50     .bss.sensors:00000000 $d
+                            *COM*:00000001 Measured
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:60     .data.True:00000000 True
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:66     .bss.False:00000000 False
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:67     .bss.False:00000000 $d
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:69     .text.getADC:00000000 $t
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:74     .text.getADC:00000000 getADC
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:186    .text.getADC:00000098 $d
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:195    .text.move:00000000 $t
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:200    .text.move:00000000 move
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:225    .rodata.move:00000000 $d
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:672    .text.move:00000324 $d
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:682    .rodata:00000000 $d
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:686    .text.main:00000000 $t
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:691    .text.main:00000000 main
+C:\Users\Student\AppData\Local\Temp\ccS6GcPc.s:1058   .text.main:00000220 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+PwmLdd1_SetDutyUS
+PwmLdd2_SetDutyUS
+w_Waitms
+PE_LDD_DeviceDataList
+PE_low_level_init
+puts
+ADC1_Init
+DMA1_Init
+BitIoLdd1_SetVal
+BitIoLdd1_ClrVal
